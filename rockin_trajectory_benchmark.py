@@ -1,12 +1,12 @@
 #!/usr/bin/python
 
-#TODO?	configuration file
+#TODO?	configuration file, output file
 #TODO?	slice and merge the rockin_mocap bags to a temporary one in order to work on just one smaller bag
 #TODO	adapt for waypoints
-#TODO	mocap bags robot's topics name to be generalised
+#TODO	robot's pose topic name in mocap bags to be generalised
 
 # tests:
-#	very long robot bag
+#	very long robot bag (might there be overflows in the sums for the error?)
 #	when more than one mocap bag are used
 #		all the right mocap bags are selected
 #		bags are concatenated in the right order
@@ -47,13 +47,13 @@ def interpolate(robot_pose, mocap_pose_1, mocap_pose_2):
 ### TODO make it a real iteration, return with yield, be sure of the end condition (possible exceptions? ie mocap poses are LESS frequent than robot poses)
 def seek_mocap_pose_at(t, dual_iterator):
 	try:
-		mocap_pose_1, mocap_pose_2 = dual_iterator.next()
+		mocap_pose_1, mocap_pose_2 = dual_iterator.current()
 		while(get_pose_time(mocap_pose_2) < t):
 			mocap_pose_1, mocap_pose_2 = dual_iterator.next()
 	except StopIteration:
 		raise EndOfBag
 	
-	if mocap_pose_1 == mocap_pose_2:
+	if mocap_pose_1 == mocap_pose_2:	# if two poses are exactly the same, almost certainly the tracking is lost
 		raise TrackingLost	# TODO test
 	else:
 		return mocap_pose_1, mocap_pose_2
@@ -61,16 +61,12 @@ def seek_mocap_pose_at(t, dual_iterator):
 class DualIterator:
 	def __init__(self, iterable_list):
 		self.iterator	= itertools.chain.from_iterable(iterable_list)
-		self.i1			= None
-		self.i2			= None
+		_, self.i1, _ = self.iterator.next()
+		_, self.i2, _ = self.iterator.next()
 	
 	def next(self):
-		if self.i1 == None or self.i2 == None:
-			_, self.i1, _ = self.iterator.next()
-			_, self.i2, _ = self.iterator.next()
-		else:
-			self.i1 = self.i2
-			_, self.i2, _ = self.iterator.next()
+		self.i1 = self.i2
+		_, self.i2, _ = self.iterator.next()
 		return self.i1, self.i2
 	
 	def current(self):
@@ -184,19 +180,13 @@ for _, robot_pose, _ in robot_bag.read_messages("/rockin/"+teamname+"/marker_pos
 	try:
 		mocap_pose_1, mocap_pose_2 = seek_mocap_pose_at(get_pose_time(robot_pose), mocap_bag_iterator)
 	except TrackingLost:
-		print "\t\ttracking was lost when:"
-		print get_pose_time(robot_pose), robot_pose.pose.position.x, robot_pose.pose.position.y, robot_pose.pose.position.z
+		print "ignoring pose because the tracking was lost while:\n", robot_pose
 		continue
 	except EndOfBag:
 		print "mocap bags are missing: there wasn't available a mocap pose corresponding to the robot's pose:\n", robot_pose
 		sys.exit(5)
 	
 	mocap_pose = interpolate(robot_pose, mocap_pose_1, mocap_pose_2)
-	
-	#print "\t\tfound:"
-	#print get_pose_time(mocap_pose_1), mocap_pose_1.pose.position.x, mocap_pose_1.pose.position.y, mocap_pose_1.pose.position.z
-	#print get_pose_time(robot_pose), robot_pose.pose.position.x, robot_pose.pose.position.y, robot_pose.pose.position.z
-	#print get_pose_time(mocap_pose_2), mocap_pose_2.pose.position.x, mocap_pose_2.pose.position.y, mocap_pose_2.pose.position.z
 	
 	# update error
 	error.update(robot_pose, mocap_pose)
