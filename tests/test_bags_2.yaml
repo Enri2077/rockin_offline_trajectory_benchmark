@@ -1,0 +1,67 @@
+# Expected result:
+#	position error:
+#		1:	|(0.0, 0.0, 1) - (0.0, 0.0, 1)|	= 0
+#		2:	ignored, TrackingLost
+#		avg: (0.0) / 1 = 0.0
+
+messages:
+    - bag: 'rockin_mocap_bag_1'
+      topic: '/airlab/robot/pose'
+      msg:
+        seq: 0
+        stamp: 0.1
+        frame_id: world
+        x: 0.0
+        y: 0.0
+        z: 1.0
+        roll: 0
+        pitch: 0
+        yaw: 0
+    - bag: 'robot_bag'
+      topic: '/rockin/team/marker_pose'
+      msg:
+        seq: 0
+        stamp: 0.25
+        frame_id: world
+        x: 0.0
+        y: 0.0
+        z: 1.0
+        roll: 0
+        pitch: 0
+        yaw: 0
+    - bag: 'rockin_mocap_bag_1'
+      topic: '/airlab/robot/pose'
+      msg:
+        seq: 1
+        stamp: 0.5
+        frame_id: world
+        x: 1.1
+        y: 1.1
+        z: 1.0
+        roll: 0
+        pitch: 0
+        yaw: 0
+    - bag: 'robot_bag'
+      topic: '/rockin/team/marker_pose'
+      msg:
+        seq: 1
+        stamp: 0.75
+        frame_id: world
+        x: 0.1
+        y: 0.1
+        z: 1.0
+        roll: 0
+        pitch: 0
+        yaw: 0
+    - bag: 'rockin_mocap_bag_1'
+      topic: '/airlab/robot/pose'
+      msg:
+        seq: 2
+        stamp: 1.0
+        frame_id: world
+        x: 1.1
+        y: 1.1
+        z: 1.0
+        roll: 0
+        pitch: 0
+        yaw: 0
