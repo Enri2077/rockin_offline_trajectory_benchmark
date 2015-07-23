@@ -12,7 +12,7 @@
 #		bags are concatenated in the right order
 #		when mocap bags are missing
 #	the mocap poses mp1, mp2 and the robot pose rp with which the error is calculated, are always such that mp1.t <= rp.t <= mp2.t
-#	the tracking was lost when a robot's pose was being logged
+# D	the tracking was lost when a robot's pose was being logged
 
 import sys, os
 import subprocess, yaml, itertools, math
@@ -30,6 +30,11 @@ def get_pose_time(pose):
 #	print pose
 	return pose.header.stamp
 
+def pose_equal_position(p1, p2):
+	return	p1.pose.position.x == p2.pose.position.x and \
+			p1.pose.position.y == p2.pose.position.y and \
+			p1.pose.position.z == p2.pose.position.z 
+
 ### TODO silent error
 ###	Get summary information about a bag;
 ###	arguments:
@@ -44,16 +49,25 @@ def get_bag_info(bag_pos):
 def interpolate(robot_pose, mocap_pose_1, mocap_pose_2):
 	return mocap_pose_1
 
-### TODO make it a real iteration, return with yield, be sure of the end condition (possible exceptions? ie mocap poses are LESS frequent than robot poses)
+### TODO maybe return with yield
 def seek_mocap_pose_at(t, dual_iterator):
 	try:
 		mocap_pose_1, mocap_pose_2 = dual_iterator.current()
 		while(get_pose_time(mocap_pose_2) < t):
 			mocap_pose_1, mocap_pose_2 = dual_iterator.next()
+			
+			t1 = get_pose_time(mocap_pose_1).to_sec()
+			t2 = get_pose_time(mocap_pose_2).to_sec()
+			
+			if t2 - t1 > 0.01:
+				print "[WARNING] mocap poses very spread apart: t1,t2 = "+ str(t1)+","+str(t2)+"difference: "+str((t2-t1)*1000)+" milliseconds"
+			if t1 > t2:
+				print "[WARNING] poses out of order."
+			
 	except StopIteration:
 		raise EndOfBag
 	
-	if mocap_pose_1 == mocap_pose_2:	# if two poses are exactly the same, almost certainly the tracking is lost
+	if pose_equal_position(mocap_pose_1, mocap_pose_2):	# if two poses are exactly the same, almost certainly the tracking is lost
 		raise TrackingLost	# TODO test
 	else:
 		return mocap_pose_1, mocap_pose_2
@@ -63,6 +77,9 @@ class DualIterator:
 		self.iterator	= itertools.chain.from_iterable(iterable_list)
 		_, self.i1, _ = self.iterator.next()
 		_, self.i2, _ = self.iterator.next()
+	
+	def __iter__(self):
+		return self
 	
 	def next(self):
 		self.i1 = self.i2
@@ -180,7 +197,7 @@ for _, robot_pose, _ in robot_bag.read_messages("/rockin/"+teamname+"/marker_pos
 	try:
 		mocap_pose_1, mocap_pose_2 = seek_mocap_pose_at(get_pose_time(robot_pose), mocap_bag_iterator)
 	except TrackingLost:
-		print "ignoring pose because the tracking was lost while:\n", robot_pose
+		print "ignoring pose at time "+str(get_pose_time(robot_pose).to_sec())+"[s] (tracking was lost)"
 		continue
 	except EndOfBag:
 		print "mocap bags are missing: there wasn't available a mocap pose corresponding to the robot's pose:\n", robot_pose
