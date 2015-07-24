@@ -52,6 +52,6 @@ for b in bags.values():
 for bag_name in bags.keys():
 	with rosbag.Bag(bag_name+'.bag') as b:
 		messages_read = b.read_messages()
-		print bag_name
+		print "\n\n\n", bag_name, "\n"
 		for m in messages_read:
-			print m
+			print m, "\n"

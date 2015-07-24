@@ -9,9 +9,9 @@
 #	very long robot bag (might there be overflows in the sums for the error?)
 #	when more than one mocap bag are used
 #		all the right mocap bags are selected
-#		bags are concatenated in the right order
-#		when mocap bags are missing
-#	the mocap poses mp1, mp2 and the robot pose rp with which the error is calculated, are always such that mp1.t <= rp.t <= mp2.t
+# D		bags are concatenated in the right order
+# D		when mocap bags are missing
+# D	the mocap poses mp1, mp2 and the robot pose rp with which the error is calculated, are always such that mp1.t <= rp.t <= mp2.t
 # D	the tracking was lost when a robot's pose was being logged
 
 import sys, os
@@ -41,34 +41,46 @@ def pose_equal_position(p1, p2):
 ###		bag_pos:	the position of the bag file
 def get_bag_info(bag_pos):
 	try:
-		return yaml.load(subprocess.Popen(['rosbag', 'info', '--yaml', bag_pos], stdout=subprocess.PIPE).communicate()[0])
+		if bag_pos.endswith('.bag'):
+			return yaml.load(subprocess.Popen(['rosbag', 'info', '--yaml', bag_pos], stdout=subprocess.PIPE).communicate()[0])
 	except:
 		return None
+
+def get_bag_info_from_object(bag_object):
+	return yaml.load(bag_object._get_yaml_info())
 
 ###	TODO
 def interpolate(robot_pose, mocap_pose_1, mocap_pose_2):
 	return mocap_pose_1
 
-### TODO maybe return with yield
 def seek_mocap_pose_at(t, dual_iterator):
 	try:
 		mocap_pose_1, mocap_pose_2 = dual_iterator.current()
+		
+		t1 = get_pose_time(mocap_pose_1).to_sec()
+		t2 = get_pose_time(mocap_pose_2).to_sec()
+		
 		while(get_pose_time(mocap_pose_2) < t):
 			mocap_pose_1, mocap_pose_2 = dual_iterator.next()
+			
+			#print "\n\n\n\nmp1:\n", mocap_pose_1, "\n\nt: "+str(t)+"\n\n", "\n\nmp2:\n", mocap_pose_2
 			
 			t1 = get_pose_time(mocap_pose_1).to_sec()
 			t2 = get_pose_time(mocap_pose_2).to_sec()
 			
-			if t2 - t1 > 0.01:
-				print "[WARNING] mocap poses very spread apart: t1,t2 = "+ str(t1)+","+str(t2)+"difference: "+str((t2-t1)*1000)+" milliseconds"
+			if t2 - t1 > 0.1:
+				print "[WARNING] consecutive mocap poses found to be very distant in time: t1,t2 = "+str(t1)+"[s],"+str(t2)+"[s] difference: "+str((t2-t1)*1000)+" milliseconds"
 			if t1 > t2:
-				print "[WARNING] poses out of order."
-			
+				print "[WARNING] poses out of order: result may be invalid. t1,t2 = "+str(t1)+"[s],"+str(t2)+"[s]"
+
 	except StopIteration:
 		raise EndOfBag
 	
+	if not (t1 <= t.to_sec() <= t2):
+		print "[ERROR] mocap poses mp1, mp2 and the robot pose rp with which the error is calculated, weren't such that mp1.t <= rp.t <= mp2.t\n\tThis should never happen. mp1.t,rp.t,mp2.t = "+str(t1)+"[s],"+str(t.to_sec())+"[s],"+str(t2)+"[s]"
+			
 	if pose_equal_position(mocap_pose_1, mocap_pose_2):	# if two poses are exactly the same, almost certainly the tracking is lost
-		raise TrackingLost	# TODO test
+		raise TrackingLost
 	else:
 		return mocap_pose_1, mocap_pose_2
 
@@ -186,12 +198,15 @@ for mocap_bag_pos in mocap_bags_pos_list:
 	mocap_messages_list.append(b.read_messages("/airlab/robot/pose"))
 print "Bags opened."
 
-#TODO order mocap_bags_list by start time (the bags must be in order, otherwise the seek function doesn't work)
+
+
+## order mocap_bags_list by start time (the bags must be in order, otherwise the seek function doesn't work)
+mocap_bags_list = sorted(mocap_bags_list, key=lambda bag: get_bag_info_from_object(bag)["start"])
 
 mocap_bag_iterator = DualIterator(mocap_messages_list)
 error = Error()
 
-# iterate through the robot's poses and the respective mocap's poses, and update the error
+## iterate through the robot's poses and the respective mocap's poses, and update the error
 for _, robot_pose, _ in robot_bag.read_messages("/rockin/"+teamname+"/marker_pose"):
 	
 	try:
@@ -210,6 +225,7 @@ for _, robot_pose, _ in robot_bag.read_messages("/rockin/"+teamname+"/marker_pos
 
 
 print error.get_position_error(), error.get_orientation_error()
+print error.sum_d, error.sum_sin, error.sum_cos
 
 ## close the bags
 for mb in mocap_bags_list:
