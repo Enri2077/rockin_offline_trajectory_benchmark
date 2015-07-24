@@ -1,8 +1,5 @@
-# Expected result:
-#	position error:
-#		1:	|(0.0, 0.0, 1) - (0.0, 0.0, 1)|	= 0
-#		2:	|(0.1, 0.1, 1) - (1.1, 1.1, 1)|	= sqrt(2) = 1.4142135623730951
-#		avg: (0.0 + 1.4142135623730951) / 2 = 0.7071067811865476
+# A message is inserted, following the order of the seq parameter, in the wrong chronological order.
+# The message is inserted in the right chronological order, and the result is not affected.
 
 messages:
     - bag: 'rockin_mocap_bag_1'
@@ -63,7 +60,7 @@ messages:
         seq: 2
         stamp: 0.25
         frame_id: world
-        x: 0.0
+        x: 0.2
         y: 0.0
         z: 1.0
         roll: 0
@@ -76,7 +73,7 @@ messages:
         seq: 2
         stamp: 0.3
         frame_id: world
-        x: 0.0
+        x: 0.2
         y: 0.0
         z: 1.0
         roll: 0
@@ -89,7 +86,7 @@ messages:
         seq: 3
         stamp: 0.2   # OUT OF ORDER
         frame_id: world
-        x: 0.1
+        x: 0.3
         y: 0.0
         z: 1.0
         roll: 0
@@ -102,7 +99,7 @@ messages:
         seq: 3
         stamp: 0.4
         frame_id: world
-        x: 0.1
+        x: 0.3
         y: 0.0
         z: 1.0
         roll: 0
@@ -115,7 +112,7 @@ messages:
         seq: 4
         stamp: 0.45
         frame_id: world
-        x: 0.0
+        x: 0.4
         y: 0.0
         z: 1.0
         roll: 0
@@ -128,7 +125,7 @@ messages:
         seq: 4
         stamp: 0.5
         frame_id: world
-        x: 0.0
+        x: 0.4
         y: 0.0
         z: 1.0
         roll: 0
@@ -141,7 +138,7 @@ messages:
         seq: 5
         stamp: 0.55
         frame_id: world
-        x: 0.1
+        x: 0.5
         y: 0.0
         z: 1.0
         roll: 0

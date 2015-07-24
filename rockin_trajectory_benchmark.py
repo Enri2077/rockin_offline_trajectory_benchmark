@@ -6,9 +6,9 @@
 #TODO	robot's pose topic name in mocap bags to be generalised
 
 # tests:
-#	very long robot bag (might there be overflows in the sums for the error?)
+# D	very long robot bag (might there be overflows in the sums for the error?)
 #	when more than one mocap bag are used
-#		all the right mocap bags are selected
+# ?		all the right mocap bags are selected
 # D		bags are concatenated in the right order
 # D		when mocap bags are missing
 # D	the mocap poses mp1, mp2 and the robot pose rp with which the error is calculated, are always such that mp1.t <= rp.t <= mp2.t
@@ -35,7 +35,6 @@ def pose_equal_position(p1, p2):
 			p1.pose.position.y == p2.pose.position.y and \
 			p1.pose.position.z == p2.pose.position.z 
 
-### TODO silent error
 ###	Get summary information about a bag;
 ###	arguments:
 ###		bag_pos:	the position of the bag file
@@ -172,7 +171,7 @@ mocap_bags_pos_list	= []
 for f in os.listdir(mocap_bags_dir):
 	mocap_bag_pos	= os.path.join(mocap_bags_dir, f)
 	mocap_bag_info	= get_bag_info(mocap_bag_pos)
-	if mocap_bag_info and mocap_bag_info["start"] <= robot_bag_end and mocap_bag_info["end"] >= robot_bag_start: #TODO test 
+	if mocap_bag_info and mocap_bag_info["start"] <= robot_bag_end and mocap_bag_info["end"] >= robot_bag_start: 
 		mocap_bags_pos_list.append(mocap_bag_pos)
 
 ## check that the mocap's bags are available
@@ -184,7 +183,7 @@ else:
 	for b in mocap_bags_pos_list:
 		print b
 
-
+#TODO? check for overlap 
 
 
 ## open the bags
