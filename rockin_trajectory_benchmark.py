@@ -147,12 +147,12 @@ def output(s):
 
 
 if len(sys.argv) < 4:
-	print "The following arguments must be provided: rockin_trajectory_benchmark.py rockin_logger_bag_file.bag rockin_mocap_bags_directory teamname\n\trockin_logger_bag_file.bag:\tthe bag produced by rockin_logger\n\trockin_mocap_bags_directory:\tthe directory in which are found all the bags produced by rockin_mocap while rockin_logger was being executed\n\tteamname:\t\t\tthe name that was set in the configuration of rockin_logger, should be the same as the one in the bag's name"
+	print "The following arguments must be provided: rockin_trajectory_benchmark.py teamname rockin_logger_bag_file.bag rockin_mocap_bags_directory\n\tteamname:\t\t\tthe name that was set in the configuration of rockin_logger, should be the same as the one in the bag's name\n\trockin_logger_bag_file.bag:\tthe bag produced by rockin_logger\n\trockin_mocap_bags_directory:\tthe directory in which are found all the bags produced by rockin_mocap while rockin_logger was being executed"
 	sys.exit(1)
 
-robot_bag_pos	= sys.argv[1]
-mocap_bags_dir	= sys.argv[2]
-teamname		= sys.argv[3]
+teamname		= sys.argv[1]
+robot_bag_pos	= sys.argv[2]
+mocap_bags_dir	= sys.argv[3]
 
 output(datetime.now().isoformat()+" "+" ".join(sys.argv))
 
@@ -176,6 +176,7 @@ if not marker_pose_found:
 robot_bag_start	= robot_bag_info["start"]
 robot_bag_end	= robot_bag_info["end"]
 
+#### BEGIN auto-selection of mocap bags to be opened; comment to specify every mocap bag individually instead of just providing the directory
 ## find all the bags produced by rockin_mocap while rockin_logger was being executed
 mocap_bags_pos_list	= []
 for f in os.listdir(mocap_bags_dir):
@@ -193,8 +194,16 @@ else:
 	for b in mocap_bags_pos_list:
 		output( " "+b )
 
-#TODO? check for overlap 
+#TODO? check for overlap
+#### END auto-selection of mocap bags to be opened; comment to specify every mocap bag individually instead of just providing the directory
 
+#### BEGIN without mocap bags auto-selection; uncomment to specify every mocap bag individually instead of just providing the directory
+#mocap_bags_pos_list = sys.argv[3:] # the mocap bags pos are the arguments from the 4th forward
+#
+#output( "The following rockin_mocap bags will be used:" )
+#for b in mocap_bags_pos_list:
+#	output( " "+b )
+#### END without mocap bags auto-selection; uncomment to specify every mocap bag individually instead of just providing the directory
 
 ## open the bags
 output( "Opening bags..." )
@@ -265,6 +274,8 @@ for _, robot_pose, _ in robot_bag.read_messages("/rockin/"+teamname+"/marker_pos
 	
 	try:
 		mocap_pose_1, mocap_pose_2 = seek_mocap_pose_at(get_pose_time(robot_pose), mocap_bag_iterator)
+		
+		#TODO? check for a maximum delay between mocap_pose_1 and robot_pose
 		
 		# if tracking was lost, ignore this robot_pose
 		if pose_equal_position(mocap_pose_1, mocap_pose_2):	# if two poses are exactly the same, almost certainly the tracking is lost

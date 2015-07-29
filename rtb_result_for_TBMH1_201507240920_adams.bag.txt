@@ -1,4 +1,4 @@
-2015-07-29T23:53:10.593654 ./rockin_trajectory_benchmark.py ../../bags/lurch/TBMH1_201507240920_adams.bag ../../bags/rockin_airlab/ adams
+2015-07-30T01:14:07.133529 ./rockin_trajectory_benchmark.py adams ../../bags/lurch/TBMH1_201507240920_adams.bag ../../bags/rockin_airlab/
 The following rockin_mocap bags will be used:
  ../../bags/rockin_airlab/log_airlab_mocap_2015-07-24-08-54-28_0.bag
 Opening bags...
