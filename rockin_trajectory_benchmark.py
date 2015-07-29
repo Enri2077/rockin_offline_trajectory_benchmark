@@ -1,6 +1,5 @@
 #!/usr/bin/python
 
-#TODO?	output file
 #TODO	adapt for waypoints
 #TODO	no auto selection of mocap_bags
 
@@ -9,6 +8,7 @@ import subprocess, yaml, itertools, math
 import rosbag
 import tf
 from std_msgs.msg import UInt8
+from datetime import datetime
 
 ROCKIN_MOCAP_TOPIC = "/airlab/robot/pose"
 
@@ -61,15 +61,15 @@ def seek_mocap_pose_at(t, dual_iterator):
 			t2 = get_pose_time(mocap_pose_2).to_sec()
 			
 			if t2 - t1 > 0.1:
-				print "[WARNING] consecutive mocap poses very distant in time: t1,t2 = "+str(t1)+"[s],"+str(t2)+"[s] difference: "+str((t2-t1)*1000)+" milliseconds"
+				output( "[WARNING] consecutive mocap poses very distant in time: t1,t2 = "+str(t1)+"[s],"+str(t2)+"[s] difference: "+str((t2-t1)*1000)+" milliseconds" )
 			if t1 > t2:
-				print "[WARNING] poses out of order: result may be invalid. t1,t2 = "+str(t1)+"[s],"+str(t2)+"[s]"
+				output( "[WARNING] poses out of order: result may be invalid. t1,t2 = "+str(t1)+"[s],"+str(t2)+"[s]" )
 
 	except StopIteration:
 		raise EndOfBag
 	
 	if not (t1 <= t.to_sec() <= t2):
-		print "[ERROR] mocap poses mp1, mp2 and the robot pose rp with which the error is calculated, weren't such that mp1.t <= rp.t <= mp2.t\n\tThis should never happen. mp1.t,rp.t,mp2.t = "+str(t1)+"[s],"+str(t.to_sec())+"[s],"+str(t2)+"[s]"
+		output( "[ERROR] mocap poses mp1, mp2 and the robot pose rp with which the error is calculated, weren't such that mp1.t <= rp.t <= mp2.t\n\tThis should never happen. mp1.t,rp.t,mp2.t = "+str(t1)+"[s],"+str(t.to_sec())+"[s],"+str(t2)+"[s]" )
 			
 	return mocap_pose_1, mocap_pose_2
 
@@ -137,7 +137,10 @@ class Error:
 		else:
 			return None
 
-
+def output(s):
+	with open("rtb_result_for_"+os.path.split(robot_bag_pos)[1]+".txt", 'a') as output_file:
+		print s
+		output_file.write(str(s)+'\n')
 
 
 
@@ -151,12 +154,14 @@ robot_bag_pos	= sys.argv[1]
 mocap_bags_dir	= sys.argv[2]
 teamname		= sys.argv[3]
 
+output(datetime.now().isoformat()+" "+" ".join(sys.argv))
+
 ## get summary information about robot_bag
 robot_bag_info = get_bag_info(robot_bag_pos)
 
 ## check that the robot's bag is available
 if not robot_bag_info:
-	print robot_bag_pos+" is not a bagfile or can't be opened"
+	output( robot_bag_pos+" is not a bagfile or can't be opened" )
 	sys.exit(2)
 
 ## check that the robot's topic is in the bag
@@ -165,7 +170,7 @@ for t in robot_bag_info["topics"]:
 	if t["topic"] == "/rockin/"+teamname+"/marker_pose":
 		marker_pose_found = True
 if not marker_pose_found:
-	print "/rockin/"+teamname+"/marker_pose topic not found in the robot's bag;\nrockin_logger_bag_file must contain this topic"
+	output( "/rockin/"+teamname+"/marker_pose topic not found in the robot's bag;\nrockin_logger_bag_file must contain this topic" )
 	sys.exit(3)
 
 robot_bag_start	= robot_bag_info["start"]
@@ -181,30 +186,30 @@ for f in os.listdir(mocap_bags_dir):
 
 ## check that the mocap's bags are available
 if len(mocap_bags_pos_list) == 0:
-	print "NO suitable rockin_mocap bags have been found in "+mocap_bags_dir
+	output( "NO suitable rockin_mocap bags have been found in "+mocap_bags_dir )
 	sys.exit(4)
 else:
-	print "The following rockin_mocap bags will be used:"
+	output( "The following rockin_mocap bags will be used:" )
 	for b in mocap_bags_pos_list:
-		print b
+		output( " "+b )
 
 #TODO? check for overlap 
 
 
 ## open the bags
-print "\nOpening bags..."
+output( "Opening bags..." )
 robot_bag = rosbag.Bag(robot_bag_pos)
 mocap_bags_list = []
 for mocap_bag_pos in mocap_bags_pos_list:
 	b = rosbag.Bag(mocap_bag_pos)
 	mocap_bags_list.append(b)
-print "Bags opened."
+output( "Bags opened." )
 
 ## order mocap_bags_list by start time (the bags must be in order, otherwise the seek function doesn't work)
 mocap_bags_list = sorted(mocap_bags_list, key=lambda bag: get_bag_info_from_object(bag)["start"])
 
 ###### Calculate the waypoints error
-
+output( "waypoints error:" )
 ## init mocap bags iterators
 mocap_messages_list = []
 for b in mocap_bags_list:
@@ -226,10 +231,10 @@ for _, waypoint_index, t in robot_bag.read_messages("/roah_rsbb/reached_waypoint
 		
 		# if tracking was lost, just warn about it
 		if pose_equal_position(mocap_pose_1, mocap_pose_2):	# if two poses are exactly the same, almost certainly the tracking is lost
-			print "[WARNING] tracking was lost at time "+str(get_pose_time(robot_pose).to_sec())+"[s], in waypoint "
+			output( "[WARNING] tracking was lost at time "+str(get_pose_time(robot_pose).to_sec())+"[s], in waypoint "+str(waypoint_index) )
 			
 	except EndOfBag:
-		print "[ERROR] mocap bags are missing: there wasn't available a mocap pose corresponding to the robot's pose:\n", robot_pose
+		output( "[ERROR] mocap bags are missing: there wasn't available a mocap pose corresponding to the robot's pose:\n" + str(robot_pose) )
 		sys.exit(5)
 	
 	mocap_pose = interpolate(robot_pose, mocap_pose_1, mocap_pose_2)
@@ -237,13 +242,15 @@ for _, waypoint_index, t in robot_bag.read_messages("/roah_rsbb/reached_waypoint
 	waypoints_error.update(robot_pose, mocap_pose)
 
 	
-print "waypoints mean distance error    A = ", waypoints_error.get_position_error()
-print "waypoints mean orientation error B = ", waypoints_error.get_orientation_error()
+output( "waypoints mean distance error    A = " + str(waypoints_error.get_position_error()) )
+output( "waypoints mean orientation error B = " + str(waypoints_error.get_orientation_error()) )
 
+output("")
 
 
 
 ###### Calculate the trajectory error
+output( "trajectory error:" )
 
 ## init mocap bags iterators
 mocap_messages_list = []
@@ -261,19 +268,20 @@ for _, robot_pose, _ in robot_bag.read_messages("/rockin/"+teamname+"/marker_pos
 		
 		# if tracking was lost, ignore this robot_pose
 		if pose_equal_position(mocap_pose_1, mocap_pose_2):	# if two poses are exactly the same, almost certainly the tracking is lost
-			print "[INFO] ignoring pose at time "+str(get_pose_time(robot_pose).to_sec())+"[s] (tracking was lost)"
+			output( "[INFO] ignoring pose at time "+str(get_pose_time(robot_pose).to_sec())+"[s] (tracking was lost)" )
 			continue
 	except EndOfBag:
-		print "mocap bags are missing: there wasn't available a mocap pose corresponding to the robot's pose:\n", robot_pose
-		sys.exit(5)
+		output( "[ERROR] mocap bags are missing: there wasn't available a mocap pose corresponding to the robot's pose:\n"+str(robot_pose) )
+		sys.exit(6)
 	
 	mocap_pose = interpolate(robot_pose, mocap_pose_1, mocap_pose_2)
 	
 	trajectory_error.update(robot_pose, mocap_pose)
 
-print "trajectory mean distance error     = ", trajectory_error.get_position_error()
-print "trajectory mean orientation error  = ", trajectory_error.get_orientation_error()
+output( "trajectory mean distance error     = "+str(trajectory_error.get_position_error()) )
+output( "trajectory mean orientation error  = "+str(trajectory_error.get_orientation_error()) )
 
+output("")
 
 ## close the bags
 for mb in mocap_bags_list:
