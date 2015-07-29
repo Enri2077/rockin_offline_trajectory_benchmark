@@ -1,0 +1,14 @@
+2015-07-29T23:53:10.593654 ./rockin_trajectory_benchmark.py ../../bags/lurch/TBMH1_201507240920_adams.bag ../../bags/rockin_airlab/ adams
+The following rockin_mocap bags will be used:
+ ../../bags/rockin_airlab/log_airlab_mocap_2015-07-24-08-54-28_0.bag
+Opening bags...
+Bags opened.
+waypoints error:
+waypoints mean distance error    A = None
+waypoints mean orientation error B = None
+
+trajectory error:
+[WARNING] consecutive mocap poses very distant in time: t1,t2 = 1437721699.71[s],1437721703.99[s] difference: 4275.09880066 milliseconds
+trajectory mean distance error     = 0.0576655534257
+trajectory mean orientation error  = 0.0828796238464
+
