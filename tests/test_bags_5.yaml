@@ -1,0 +1,134 @@
+# some robot poses are after the last mocap poses 
+# expected result: [ERROR] mocap bags are missing
+
+messages:
+    - bag: 'rockin_mocap_bag_1'
+      topic: '/airlab/robot/pose'
+      msg:
+        seq: 0
+        stamp: 0.05
+        frame_id: world
+        x: 0.0
+        y: 0.0
+        z: 1.0
+        roll: 0
+        pitch: 0
+        yaw: 0
+
+    - bag: 'robot_bag'
+      topic: '/rockin/team/marker_pose'
+      msg:
+        seq: 0
+        stamp: 0.1
+        frame_id: world
+        x: 0.0
+        y: 0.0
+        z: 1.0
+        roll: 0
+        pitch: 0
+        yaw: 0
+
+    - bag: 'rockin_mocap_bag_1'
+      topic: '/airlab/robot/pose'
+      msg:
+        seq: 1
+        stamp: 0.15
+        frame_id: world
+        x: 0.1
+        y: 0.0
+        z: 1.0
+        roll: 0
+        pitch: 0
+        yaw: 0
+
+    - bag: 'robot_bag'
+      topic: '/rockin/team/marker_pose'
+      msg:
+        seq: 1
+        stamp: 0.2
+        frame_id: world
+        x: 0.1
+        y: 0.0
+        z: 1.0
+        roll: 0
+        pitch: 0
+        yaw: 0
+
+    - bag: 'rockin_mocap_bag_1'
+      topic: '/airlab/robot/pose'
+      msg:
+        seq: 2
+        stamp: 0.25
+        frame_id: world
+        x: 0.2
+        y: 0.0
+        z: 1.0
+        roll: 0
+        pitch: 0
+        yaw: 0
+
+    - bag: 'robot_bag'
+      topic: '/rockin/team/marker_pose'
+      msg:
+        seq: 2
+        stamp: 0.3
+        frame_id: world
+        x: 0.2
+        y: 0.0
+        z: 1.0
+        roll: 0
+        pitch: 0
+        yaw: 0
+
+    - bag: 'rockin_mocap_bag_1'
+      topic: '/airlab/robot/pose'
+      msg:
+        seq: 3
+        stamp: 0.35   # OUT OF ORDER
+        frame_id: world
+        x: 0.3
+        y: 0.0
+        z: 1.0
+        roll: 0
+        pitch: 0
+        yaw: 0
+
+    - bag: 'robot_bag'
+      topic: '/rockin/team/marker_pose'
+      msg:
+        seq: 3
+        stamp: 0.4
+        frame_id: world
+        x: 0.3
+        y: 0.0
+        z: 1.0
+        roll: 0
+        pitch: 0
+        yaw: 0
+
+    - bag: 'rockin_mocap_bag_1'
+      topic: '/airlab/robot/pose'
+      msg:
+        seq: 4
+        stamp: 0.45
+        frame_id: world
+        x: 0.4
+        y: 0.0
+        z: 1.0
+        roll: 0
+        pitch: 0
+        yaw: 0
+
+    - bag: 'robot_bag'
+      topic: '/rockin/team/marker_pose'
+      msg:
+        seq: 4
+        stamp: 0.5
+        frame_id: world
+        x: 0.4
+        y: 0.0
+        z: 1.0
+        roll: 0
+        pitch: 0
+        yaw: 0
+
