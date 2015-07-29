@@ -1,17 +1,8 @@
 #!/usr/bin/python
 
-#TODO?	configuration file, output file
+#TODO?	output file
 #TODO	adapt for waypoints
-#TODO	robot's pose topic name in mocap bags to be generalised
-
-# tests:
-# D	very long robot bag (might there be overflows in the sums for the error?)
-#	when more than one mocap bag are used
-# ?		all the right mocap bags are selected
-# D		bags are concatenated in the right order
-# D		when mocap bags are missing
-# D	the mocap poses mp1, mp2 and the robot pose rp with which the error is calculated, are always such that mp1.t <= rp.t <= mp2.t
-# D	the tracking was lost when a robot's pose was being logged
+#TODO	no auto selection of mocap_bags
 
 import sys, os
 import subprocess, yaml, itertools, math
@@ -22,11 +13,12 @@ from std_msgs.msg import UInt8
 ROCKIN_MOCAP_TOPIC = "/airlab/robot/pose"
 
 
+
+
 class EndOfBag(Exception):
 	pass
 
 def get_pose_time(pose):
-#	print pose
 	return pose.header.stamp
 
 def pose_equal_position(p1, p2):
@@ -34,9 +26,8 @@ def pose_equal_position(p1, p2):
 			p1.pose.position.y == p2.pose.position.y and \
 			p1.pose.position.z == p2.pose.position.z 
 
-###	Get summary information about a bag;
-###	arguments:
-###		bag_pos:	the position of the bag file
+###	Get summary information about a bag file, specified through the bag's posision;
+###	bag_pos:	the position of the bag file
 def get_bag_info(bag_pos):
 	try:
 		if bag_pos.endswith('.bag'):
@@ -44,13 +35,18 @@ def get_bag_info(bag_pos):
 	except:
 		return None
 
+###	Get summary information about a bag object (already opened);
+###	bag_object: already opened bag object
 def get_bag_info_from_object(bag_object):
 	return yaml.load(bag_object._get_yaml_info())
 
-###	TODO
+###	not used: interpolation should not be necessary since the mocap poses are much more frequent than the robot poses
 def interpolate(robot_pose, mocap_pose_1, mocap_pose_2):
 	return mocap_pose_1
 
+### go through the iterator until the couples of poses p1, p2 are such that p1.t <= t <= p2.t, and returns p1, p2
+### t instance of rospy.Time
+### raise EndOfBag when the poses run out
 def seek_mocap_pose_at(t, dual_iterator):
 	try:
 		mocap_pose_1, mocap_pose_2 = dual_iterator.current()
@@ -60,8 +56,6 @@ def seek_mocap_pose_at(t, dual_iterator):
 		
 		while(get_pose_time(mocap_pose_2) < t):
 			mocap_pose_1, mocap_pose_2 = dual_iterator.next()
-			
-			#print "\n\n\n\nmp1:\n", mocap_pose_1, "\n\nt: "+str(t)+"\n\n", "\n\nmp2:\n", mocap_pose_2
 			
 			t1 = get_pose_time(mocap_pose_1).to_sec()
 			t2 = get_pose_time(mocap_pose_2).to_sec()
@@ -77,13 +71,10 @@ def seek_mocap_pose_at(t, dual_iterator):
 	if not (t1 <= t.to_sec() <= t2):
 		print "[ERROR] mocap poses mp1, mp2 and the robot pose rp with which the error is calculated, weren't such that mp1.t <= rp.t <= mp2.t\n\tThis should never happen. mp1.t,rp.t,mp2.t = "+str(t1)+"[s],"+str(t.to_sec())+"[s],"+str(t2)+"[s]"
 			
-	#if pose_equal_position(mocap_pose_1, mocap_pose_2):	# if two poses are exactly the same, almost certainly the tracking is lost
-	#	raise TrackingLost
-		
-	#else:
-	#	return mocap_pose_1, mocap_pose_2
 	return mocap_pose_1, mocap_pose_2
 
+##### Iterator that iterates throuh couples of (mocap) poses.
+##### iterable_list: list of messages iterators (from the mocap bags)
 class DualIterator:
 	def __init__(self, iterable_list):
 		self.iterator	= itertools.chain.from_iterable(iterable_list)
@@ -100,6 +91,7 @@ class DualIterator:
 	
 	def current(self):
 		return self.i1, self.i2
+
 
 class Error:
 	def __init__(self):
@@ -145,8 +137,14 @@ class Error:
 		else:
 			return None
 
+
+
+
+
+
+
 if len(sys.argv) < 4:
-	print "Two arguments must be provided: rockin_trajectory_benchmark.py rockin_logger_bag_file.bag rockin_mocap_bags_directory teamname\n\trockin_logger_bag_file.bag:\tthe bag produced by rockin_logger\n\trockin_mocap_bags_directory:\tthe directory in which are found all the bags produced by rockin_mocap while rockin_logger was being executed\n\tteamname:\t\t\tthe name that was set in the configuration of rockin_logger, should be the same as the one in the bag's name"
+	print "The following arguments must be provided: rockin_trajectory_benchmark.py rockin_logger_bag_file.bag rockin_mocap_bags_directory teamname\n\trockin_logger_bag_file.bag:\tthe bag produced by rockin_logger\n\trockin_mocap_bags_directory:\tthe directory in which are found all the bags produced by rockin_mocap while rockin_logger was being executed\n\tteamname:\t\t\tthe name that was set in the configuration of rockin_logger, should be the same as the one in the bag's name"
 	sys.exit(1)
 
 robot_bag_pos	= sys.argv[1]
@@ -276,8 +274,6 @@ for _, robot_pose, _ in robot_bag.read_messages("/rockin/"+teamname+"/marker_pos
 print "trajectory mean distance error     = ", trajectory_error.get_position_error()
 print "trajectory mean orientation error  = ", trajectory_error.get_orientation_error()
 
-
-#print trajectory_error.sum_d, trajectory_error.sum_sin, trajectory_error.sum_cos
 
 ## close the bags
 for mb in mocap_bags_list:
