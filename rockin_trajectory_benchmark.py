@@ -1,7 +1,5 @@
 #!/usr/bin/python
 
-#TODO	adapt for waypoints
-
 import sys, os
 import subprocess, yaml, itertools, math
 import rosbag
@@ -273,7 +271,7 @@ for _, robot_pose, _ in robot_bag.read_messages("/rockin/"+teamname+"/marker_pos
 	try:
 		mocap_pose_1, mocap_pose_2 = seek_mocap_pose_at(get_pose_time(robot_pose), mocap_bag_iterator)
 		
-		#TODO? check for a maximum delay between mocap_pose_1 and robot_pose; not strictly necessary
+		# check for a maximum delay between the mocap poses and robot_pose
 		if get_pose_time(mocap_pose_2).to_sec() - get_pose_time(mocap_pose_1).to_sec() > 0.1:
 		    output( "[WARNING] consecutive mocap poses very distant in time, used to calculate the error (result may be invalid): t1,t2 = "+str(get_pose_time(mocap_pose_1).to_sec())+"[s],"+str(get_pose_time(mocap_pose_2).to_sec())+"[s] difference: "+str((get_pose_time(mocap_pose_2).to_sec() - get_pose_time(mocap_pose_1).to_sec())*1000)+" milliseconds" )
 		
