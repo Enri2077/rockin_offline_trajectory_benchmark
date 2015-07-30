@@ -1,7 +1,6 @@
 #!/usr/bin/python
 
 #TODO	adapt for waypoints
-#TODO	no auto selection of mocap_bags
 
 import sys, os
 import subprocess, yaml, itertools, math
@@ -194,7 +193,6 @@ else:
 	for b in mocap_bags_pos_list:
 		output( " "+b )
 
-#TODO? check for overlap
 #### END auto-selection of mocap bags to be opened; comment to specify every mocap bag individually instead of just providing the directory
 
 #### BEGIN without mocap bags auto-selection; uncomment to specify every mocap bag individually instead of just providing the directory
@@ -275,7 +273,7 @@ for _, robot_pose, _ in robot_bag.read_messages("/rockin/"+teamname+"/marker_pos
 	try:
 		mocap_pose_1, mocap_pose_2 = seek_mocap_pose_at(get_pose_time(robot_pose), mocap_bag_iterator)
 		
-		#TODO? check for a maximum delay between mocap_pose_1 and robot_pose
+		#TODO? check for a maximum delay between mocap_pose_1 and robot_pose; not strictly necessary
 		
 		# if tracking was lost, ignore this robot_pose
 		if pose_equal_position(mocap_pose_1, mocap_pose_2):	# if two poses are exactly the same, almost certainly the tracking is lost
