@@ -31,7 +31,7 @@ This warning means that either the mocap poses in the mocap bag are not (chronol
 	· [WARNING] consecutive mocap poses very distant in time:
 This means that there is a "hole" in the mocap bag and that there aren't available mocap poses for an extended period, this might compromise the correctness of the result.
 
-    · [WARNING] consecutive mocap poses very distant in time, used to calculate the error:
+	· [WARNING] consecutive mocap poses very distant in time, used to calculate the error:
 As the previous warning, but this also mean that the couple of mocap poses has been used to calculate the error, so the robot pose and the mocap pose(s) are very distant in time too.
 Most probably the error calculated with these particular poses is very imprecise (although the effect on the final result might be negligible).
 
