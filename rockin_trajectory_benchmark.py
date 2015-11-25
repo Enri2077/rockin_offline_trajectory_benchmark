@@ -7,7 +7,7 @@ import tf
 from std_msgs.msg import UInt8
 from datetime import datetime
 
-ROCKIN_MOCAP_TOPIC = "/airlab/robot/pose"
+ROCKIN_MOCAP_TOPIC = "/home/robot_at_home/pose"
 
 
 
@@ -214,43 +214,43 @@ output( "Bags opened." )
 mocap_bags_list = sorted(mocap_bags_list, key=lambda bag: get_bag_info_from_object(bag)["start"])
 
 ###### Calculate the waypoints error
-output( "waypoints error:" )
+#output( "waypoints error:" )
 ## init mocap bags iterators
-mocap_messages_list = []
-for b in mocap_bags_list:
-	mocap_messages_list.append(b.read_messages(ROCKIN_MOCAP_TOPIC))
-
-mocap_bag_iterator = DualIterator(mocap_messages_list)
-waypoints_error  = Error()
-
+#mocap_messages_list = []
+#for b in mocap_bags_list:
+#	mocap_messages_list.append(b.read_messages(ROCKIN_MOCAP_TOPIC))
+#
+#mocap_bag_iterator = DualIterator(mocap_messages_list)
+#waypoints_error  = Error()
+#
 ## TODO find all waypoints
-waypoints = [] # = something_something(robot_bag.read_messages("/roah_rsbb/goal")) # type: geometry_msgs/Pose2D
-
-for _, waypoint_index, t in robot_bag.read_messages("/roah_rsbb/reached_waypoint"):
-	# get the waypoint pose2D from waypoints
-	wp_expected_pose = waypoints[waypoint_index]
-	
-	try:
-		# get the respective mocap_pose
-		mocap_pose_1, mocap_pose_2 = seek_mocap_pose_at(get_pose_time(robot_pose), mocap_bag_iterator)
-		
-		# if tracking was lost, just warn about it
-		if pose_equal_position(mocap_pose_1, mocap_pose_2):	# if two poses are exactly the same, almost certainly the tracking is lost
-			output( "[WARNING] tracking was lost at time "+str(get_pose_time(robot_pose).to_sec())+"[s], in waypoint "+str(waypoint_index) )
-			
-	except EndOfBag:
-		output( "[ERROR] mocap bags are missing: there wasn't available a mocap pose corresponding to the robot's pose:\n" + str(robot_pose) )
-		sys.exit(5)
-	
-	mocap_pose = interpolate(robot_pose, mocap_pose_1, mocap_pose_2)
-	
-	waypoints_error.update(robot_pose, mocap_pose)
-
-	
-output( "waypoints mean distance error    A = " + str(waypoints_error.get_position_error()) )
-output( "waypoints mean orientation error B = " + str(waypoints_error.get_orientation_error()) )
-
-output("")
+#waypoints = [] # = something_something(robot_bag.read_messages("/roah_rsbb/goal")) # type: geometry_msgs/Pose2D
+#
+#for _, waypoint_index, t in robot_bag.read_messages("/roah_rsbb/reached_waypoint"):
+#	# get the waypoint pose2D from waypoints
+#	wp_expected_pose = waypoints[waypoint_index]
+#	
+#	try:
+#		# get the respective mocap_pose
+#		mocap_pose_1, mocap_pose_2 = seek_mocap_pose_at(get_pose_time(robot_pose), mocap_bag_iterator)
+#		
+#		# if tracking was lost, just warn about it
+#		if pose_equal_position(mocap_pose_1, mocap_pose_2):	# if two poses are exactly the same, almost certainly the tracking is lost
+#			output( "[WARNING] tracking was lost at time "+str(get_pose_time(robot_pose).to_sec())+"[s], in waypoint "+str(waypoint_index) )
+#			
+#	except EndOfBag:
+#		output( "[ERROR] mocap bags are missing: there wasn't available a mocap pose corresponding to the robot's pose:\n" + str(robot_pose) )
+#		sys.exit(5)
+#	
+#	mocap_pose = interpolate(robot_pose, mocap_pose_1, mocap_pose_2)
+#	
+#	waypoints_error.update(robot_pose, mocap_pose)
+#
+#	
+#output( "waypoints mean distance error    A = " + str(waypoints_error.get_position_error()) )
+#output( "waypoints mean orientation error B = " + str(waypoints_error.get_orientation_error()) )
+#
+#output("")
 
 
 
